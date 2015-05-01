@@ -1,19 +1,44 @@
 (function() {
   $.getJSON( '/igMediaCounts')
     .done(function( data ) {
-      var yCounts = data.users.map(function(item){
-        return item.counts.media;
+      var users = data.users;
+      users.sort(function(a,b){
+        return a.counts.followed_by - b.counts.followed_by;
       });
-      
-      yCounts.unshift('Media Count');
+      var followsCounts = users.map(function(item){
+        return item.counts.follows;
+      });
+      var followedByCounts = users.map(function(item){
+        return item.counts.followed_by;
+      });
+      followsCounts.unshift('Follows');
+      followedByCounts.unshift('Followed By');
 
       var chart = c3.generate({
-        bindto: '#chart',
         data: {
           columns: [
-            yCounts 
-          ]
+            followsCounts,
+            followedByCounts
+          ],
+          type: 'scatter'
+        },
+        tooltip: {
+          format: {
+            title: function (d) { return users[d].username; }
+          }
         }
       });
+      setTimeout(function repeat() {
+        setTimeout(function () {
+            chart.transform('spline');
+        }, 2500);
+        setTimeout(function () {
+            chart.transform('bar');
+        }, 5000);
+        setTimeout(function () {
+            chart.transform('scatter');
+            repeat();
+        }, 7500);
+      }, 0);
     });
 })();
