@@ -26,13 +26,26 @@ var svg = d3.select("body").append("svg")
   .append("g")
   .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
 
+var tip = d3.tip()
+  .attr('class', 'd3-tip')
+  .offset([-10, 0])
+  .html(function(d) {
+    return "<strong>Media Count:</strong> <span style='color:red'>" + d.counts.media + "</span>";
+  });
+
 //get json object which contains media counts
 d3.json('/igMediaCounts', function(error, data) {
+  var users = data.users;
+  console.log(users);
+  users.sort(function(a,b){
+    return a.counts.media - b.counts.media;
+  });
   //set domain of x to be all the usernames contained in the data
-  scaleX.domain(data.users.map(function(d) { return d.username; }));
+  scaleX.domain(users.map(function(d) { return d.username; }));
   //set domain of y to be from 0 to the maximum media count returned
-  scaleY.domain([0, d3.max(data.users, function(d) { return d.counts.media; })]);
+  scaleY.domain([0, d3.max(users, function(d) { return d.counts.media; })]);
 
+  svg.call(tip);
   //set up x axis
   svg.append("g")
     .attr("class", "x axis")
@@ -59,11 +72,13 @@ d3.json('/igMediaCounts', function(error, data) {
 
   //set up bars in bar graph
   svg.selectAll(".bar")
-    .data(data.users)
+    .data(users)
     .enter().append("rect")
     .attr("class", "bar")
     .attr("x", function(d) { return scaleX(d.username); })
     .attr("width", scaleX.rangeBand())
     .attr("y", function(d) { return scaleY(d.counts.media); })
-    .attr("height", function(d) { return height - scaleY(d.counts.media); });
+    .attr("height", function(d) { return height - scaleY(d.counts.media); })
+    .on("mouseover",tip.show)
+    .on("mouseout",tip.hide);
 });
