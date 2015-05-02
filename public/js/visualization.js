@@ -33,13 +33,22 @@ var tip = d3.tip()
     return "<strong>Media Count:</strong> <span style='color:red'>" + d.counts.media + "</span>";
   });
 
+var spinnerVisible = false;
+if (!spinnerVisible) {
+  $("div#spinner").fadeIn("fast");
+  spinnerVisible = true;
+}
+
 //get json object which contains media counts
 d3.json('/igMediaCounts', function(error, data) {
+  if (spinnerVisible) {
+    var spinner = $("div#spinner");
+    spinner.stop();
+    spinner.fadeOut("fast");
+    spinnerVisible = false;
+  }
+
   var users = data.users;
-  console.log(users);
-  users.sort(function(a,b){
-    return a.counts.media - b.counts.media;
-  });
   //set domain of x to be all the usernames contained in the data
   scaleX.domain(users.map(function(d) { return d.username; }));
   //set domain of y to be from 0 to the maximum media count returned
@@ -81,4 +90,25 @@ d3.json('/igMediaCounts', function(error, data) {
     .attr("height", function(d) { return height - scaleY(d.counts.media); })
     .on("mouseover",tip.show)
     .on("mouseout",tip.hide);
+
+  var sortBars = function () {
+    sortItems = function (a, b) {
+        return a.counts.media - b.counts.media;
+    };
+    svg.selectAll("rect")
+        .sort(sortItems)
+        .transition()
+        .delay(function (d, i) {
+          return i * 50;
+        })
+        .duration(1000)
+        .attr("class", "bar")
+        .attr("x", function (d, i) {
+          return scaleX(users[i].username);
+        })
+        .attr("width", scaleX.rangeBand());   
+  };
+
+  d3.select("#sortBtr").on("click", sortBars);
 });
+

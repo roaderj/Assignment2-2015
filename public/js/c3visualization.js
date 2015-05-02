@@ -1,6 +1,17 @@
 (function() {
+  var spinnerVisible = false;
+  if (!spinnerVisible) {
+    $("div#spinner").fadeIn("fast");
+    spinnerVisible = true;
+  }
   $.getJSON( '/igMediaCounts')
     .done(function( data ) {
+      if (spinnerVisible) {
+        var spinner = $("div#spinner");
+        spinner.stop();
+        spinner.fadeOut("fast");
+        spinnerVisible = false;
+      }
       var users = data.users;
       users.sort(function(a,b){
         return a.counts.followed_by - b.counts.followed_by;
